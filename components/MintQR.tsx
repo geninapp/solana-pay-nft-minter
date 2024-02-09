@@ -1,15 +1,17 @@
-import { useEffect, useMemo, useRef } from "react";
-import { Flex } from "@chakra-ui/react";
+import { useEffect, useMemo, useRef } from 'react';
+import { Flex } from '@chakra-ui/react';
 import {
   createQR,
   encodeURL,
   TransactionRequestURLFields,
   findReference,
   FindReferenceError,
-} from "@solana/pay";
-import { Keypair } from "@solana/web3.js";
-import { useConnection } from "@solana/wallet-adapter-react";
-import useToastHook from "@/hooks/useToastHook";
+} from '@solana/pay';
+import { Keypair } from '@solana/web3.js';
+import { useConnection } from '@solana/wallet-adapter-react';
+import useToastHook from '@/hooks/useToastHook';
+
+const redirectToSite = process.env.NEXT_PUBLIC_QR_CODE_URL as string;
 
 export default function MintQR() {
   const { connection } = useConnection();
@@ -42,16 +44,18 @@ export default function MintQR() {
     };
     const solanaUrl = encodeURL(urlParams);
 
+    console.log(redirectToSite + solanaUrl.pathname);
+
     // Create QR code encoded with Solana Pay URL
     const qr = createQR(
-      solanaUrl, // The Solana Pay URL
+      redirectToSite + solanaUrl.pathname, // The Solana Pay URL
       512, // The size of the QR code
-      "transparent" // The background color of the QR code
+      'transparent' // The background color of the QR code
     );
 
     // Update the ref with the QR code
     if (qrRef.current) {
-      qrRef.current.innerHTML = "";
+      qrRef.current.innerHTML = '';
       qr.append(qrRef.current);
     }
   }, [reference]);
@@ -63,7 +67,7 @@ export default function MintQR() {
         // Find transactions that include the reference address
         const signatureInfo = await findReference(connection, reference, {
           until: mostRecentNotifiedTransaction.current, // Only look for transactions after the most recent one we've found
-          finality: "confirmed",
+          finality: 'confirmed',
         });
 
         // Update the most recent transaction with the transaction we just found
@@ -76,7 +80,7 @@ export default function MintQR() {
           // No transaction found yet, ignore this error
           return;
         }
-        console.error("Unknown error", e);
+        console.error('Unknown error', e);
       }
     }, 1000); // Check for new transactions every second
     return () => {
